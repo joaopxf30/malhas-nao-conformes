@@ -33,3 +33,7 @@ class Poligono(ABC):
     @abstractmethod
     def _determina_centroide(self) -> Ponto:
         pass
+
+    @abstractmethod
+    def calcula_area(self) -> float:
+        pass

@@ -1,47 +1,41 @@
 from plot import visualiza_algoritmo
-from src.constants import Orientacao
-from src.malhas_nao_conformes.dominio.paralelepipedo import Paralelepipedo
+from src.malhas_nao_conformes.dominio.poliedro import Poliedro
 from src.malhas_nao_conformes.dominio.poligono import Poligono
+from src.sutherland_hodgman import SutherlandHodgman
 
 TOLERANCIA = 1e-3
 
 
 class Malha:
-    def __init__(self, paralelepipedos: list[Paralelepipedo]):
-        self.paralelepipedos = paralelepipedos
+    def __init__(self, elementos: list[Poliedro]):
+        self.elementos = elementos
 
-    def obtem_elementos_adjacentes(self, paralelepipedo_referencia: Paralelepipedo) -> list["Paralelepipedo"] | None:
-        for face_referencia in paralelepipedo_referencia.faces:
-            normal_referencia = face_referencia.normal
-            centroide_referencia = face_referencia.centroide
+    def obtem_elementos_adjacentes(self, elemento: Poliedro) -> list[Poliedro] | None:
+        elementos_adjacentes = []
+        for face_referencia in elemento.faces:
+            elementos = self.obtem_elementos_ajdacentes_por_face(face_referencia)
+            elementos_adjacentes.extend(elementos)
 
-            for paralelepipedo_incidente in self.paralelepipedos:
-                normal_oposta_referencia = normal_referencia.obtem_vetor_oposto()
-                face_incidente = paralelepipedo_incidente.face_por_normal.get(normal_oposta_referencia)
-                centroide_incidente = face_incidente.centroide
-                vetor = centroide_referencia - centroide_incidente
-                vetor_projetado = vetor.projeta_na_direcao(normal_oposta_referencia)
+        return elementos_adjacentes
 
-                if vetor_projetado.calcula_norma_euclidiana() < TOLERANCIA:
-                    visualiza_algoritmo(face_referencia, face_incidente, paralelepipedos=self.paralelepipedos)
-                    self.recorte_geometrico_com_surtherland_hodgman(face_referencia, face_incidente)
+    def obtem_elementos_ajdacentes_por_face(
+        self,
+        face: Poligono
+    ) -> list[Poliedro]:
+        normal = face.normal
+        centroide = face.centroide
 
-    @staticmethod
-    def recorte_geometrico_com_surtherland_hodgman(face_referencia: Poligono, face_incidente: Poligono):
-        for aresta_referencia in face_referencia.arestas:
-            visualiza_algoritmo(face_referencia, face_incidente, aresta_referencia)
+        elementos_adjacentes = []
+        for elemento in self.elementos:
+            normal_oposta = normal.obtem_vetor_oposto()
+            face_candidata = elemento.face_por_normal.get(normal_oposta)
+            centroide_candidato = face_candidata.centroide
+            vetor = centroide - centroide_candidato
+            projecao = vetor.projeta_na_direcao(normal_oposta)
 
-            for aresta_incidente in face_incidente.arestas:
-                pontos = []
+            if projecao.calcula_norma_euclidiana() < TOLERANCIA:
+                # visualiza_algoritmo(face, face_candidata, paralelepipedos=self.elementos)
+                if SutherlandHodgman().recorte_geometrico(face, face_candidata):
+                    elementos_adjacentes.append(elemento)
 
-                vertice_incicial = aresta_incidente.vertice_inicial
-                vertice_final = aresta_incidente.vertice_final
-                orientacao_inicial = aresta_referencia.localiza_ponto(vertice_incicial)
-                orientacao_final = aresta_referencia.localiza_ponto(vertice_final)
-
-                if orientacao_final != Orientacao.DIREITA:
-                    if orientacao_inicial == Orientacao.ESQUERDA:
-                        vertice_intersecao = aresta_referencia.intersecta(aresta_incidente)
-                        pontos.append(vertice_intersecao)
-
-                    pontos.append(vertice_final)
+        return elementos_adjacentes

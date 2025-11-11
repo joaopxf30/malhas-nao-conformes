@@ -26,3 +26,9 @@ class Retangulo(Poligono):
         z = (vertice_1.z + vertice_2.z)/2
 
         return Ponto(x,y,z)
+
+    def calcula_area(self) -> float:
+        base = self.arestas[0].ordenamento.calcula_norma_euclidiana()
+        altura = self.arestas[1].ordenamento.calcula_norma_euclidiana()
+
+        return base * altura
