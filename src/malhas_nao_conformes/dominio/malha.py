@@ -29,7 +29,7 @@ class Malha:
     @staticmethod
     def recorte_geometrico_com_surtherland_hodgman(face_referencia: Poligono, face_incidente: Poligono):
         for aresta_referencia in face_referencia.arestas:
-            # visualiza_algoritmo(face_referencia, face_incidente, aresta_referencia)
+            visualiza_algoritmo(face_referencia, face_incidente, aresta_referencia)
 
             for aresta_incidente in face_incidente.arestas:
                 pontos = []
@@ -41,7 +41,7 @@ class Malha:
 
                 if orientacao_final != Orientacao.DIREITA:
                     if orientacao_inicial == Orientacao.ESQUERDA:
-                        vertice_intersecao = ...
+                        vertice_intersecao = aresta_referencia.intersecta(aresta_incidente)
                         pontos.append(vertice_intersecao)
 
                     pontos.append(vertice_final)
