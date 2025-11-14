@@ -1,17 +1,18 @@
 from input.translada import translada
-from src.malhas_nao_conformes.dominio.paralelepipedo import Paralelepipedo
+from src.malhas_nao_conformes.dominio.hexaedro import Hexaedro
 from src.malhas_nao_conformes.dominio.ponto import Ponto
-from src.malhas_nao_conformes.dominio.retangulo import Retangulo
 
 
-cubo_1 = Paralelepipedo(
-    faces=[
-        Retangulo([Ponto(0, 0, 0), Ponto(0, 0, 1), Ponto(1, 0, 1), Ponto(1, 0, 0)]),
-        Retangulo([Ponto(1, 0, 0), Ponto(1, 0, 1), Ponto(1, 1, 1), Ponto(1, 1, 0)]),
-        Retangulo([Ponto(1, 1, 0), Ponto(1, 1, 1), Ponto(0, 1, 1), Ponto(0, 1, 0)]),
-        Retangulo([Ponto(0, 0, 0), Ponto(0, 1, 0), Ponto(0, 1, 1), Ponto(0, 0, 1)]),
-        Retangulo([Ponto(0, 0, 0), Ponto(1, 0, 0), Ponto(1, 1, 0), Ponto(0, 1, 0)]),
-        Retangulo([Ponto(1, 1, 1), Ponto(1, 0, 1), Ponto(0, 0, 1), Ponto(0, 1, 1)]),
+cubo_1 = Hexaedro.inicializa_por_vertices(
+    [
+        Ponto(0, 0, 0),
+        Ponto(0, 0, 1),
+        Ponto(1, 0, 1),
+        Ponto(1, 0, 0),
+        Ponto(1, 0, 0),
+        Ponto(1, 0, 1),
+        Ponto(1, 1, 1),
+        Ponto(1, 1, 0)
     ]
 )
 

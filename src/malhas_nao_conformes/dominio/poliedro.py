@@ -1,16 +1,23 @@
+from abc import ABC, abstractmethod
 from src.malhas_nao_conformes.dominio.poligono import Poligono
+from src.malhas_nao_conformes.dominio.ponto import Ponto
 from src.malhas_nao_conformes.dominio.vetor import Vetor
 
 
-class Poliedro:
+class Poliedro(ABC):
     def __init__(self, faces: list[Poligono]):
         self.faces = faces
-        self.face_por_normal: dict[Vetor, Poligono] = self._determina_face_por_normal()
+        self.vertices = self.__obtem_vertices()
+        self.centro = self.__obtem_centro_massa()
 
-    def _determina_face_por_normal(self):
-        face_por_normal = {}
+    @abstractmethod
+    def __obtem_centro_massa(self) -> Ponto:
+        pass
+
+    def __obtem_vertices(self) -> list[Ponto]:
+        vertices = []
         for face in self.faces:
-            normal = face.normal
-            face_por_normal[normal] = face
+            vertices.append(face.vertices)
 
-        return face_por_normal
+        return list(set(vertices))
+

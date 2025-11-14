@@ -1,6 +1,7 @@
 from plot import visualiza_algoritmo
 from src.malhas_nao_conformes.dominio.poliedro import Poliedro
 from src.malhas_nao_conformes.dominio.poligono import Poligono
+from src.malhas_nao_conformes.dominio.vetor import Vetor
 from src.sutherland_hodgman import SutherlandHodgman
 
 TOLERANCIA = 1e-3
@@ -9,6 +10,7 @@ TOLERANCIA = 1e-3
 class Malha:
     def __init__(self, elementos: list[Poliedro]):
         self.elementos = elementos
+        self.indexacao_estruturada: dict[Vetor, Poliedro] =
 
     def obtem_elementos_adjacentes(self, elemento: Poliedro) -> list[Poliedro] | None:
         elementos_adjacentes = []
@@ -39,3 +41,5 @@ class Malha:
                     elementos_adjacentes.append(elemento)
 
         return elementos_adjacentes
+
+    def

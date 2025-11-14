@@ -1,36 +1,59 @@
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import matplotlib.pyplot as plt
 
-from src.malhas_nao_conformes.dominio.paralelepipedo import Paralelepipedo
 from src.malhas_nao_conformes.dominio.poligono import Poligono
 from src.malhas_nao_conformes.dominio.segmento import Segmento
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+import matplotlib.pyplot as plt
 
-
-def plota_cubos(cubos: list[Paralelepipedo], cor='cyan', alpha=0.3, borda='k'):
+def plota_adjacencias(malha, elemento, vizinhos):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
-    for cubo in cubos:
-        for face in cubo.faces:
-            # cada face é um Polígono com seus vértices
-            vertices = face.vertices
-            for i in range(len(vertices)):
-                v1 = vertices[i]
-                v2 = vertices[(i + 1) % len(vertices)]  # conecta em loop
-                ax.plot(
-                    [v1.x, v2.x],
-                    [v1.y, v2.y],
-                    [v1.z, v2.z],
-                    color='gray',
-                    alpha=0.7,
-                    linewidth=1
-                )
+    # ─────────────────────────────────────────
+    # 1) MALHA → apenas arestas (mais limpo)
+    # ─────────────────────────────────────────
+    for hexa in malha:
+        for face in hexa.faces:
+            verts = face.vertices
+            for i in range(len(verts)):
+                v1 = verts[i]
+                v2 = verts[(i + 1) % len(verts)]
+                ax.plot([v1.x, v2.x], [v1.y, v2.y], [v1.z, v2.z],
+                        color='gray', linewidth=0.8, alpha=0.4)
+
+    # ─────────────────────────────────────────
+    # 2) VIZINHOS → faces transparentes
+    # ─────────────────────────────────────────
+    for hexa in vizinhos:
+        for face in hexa.faces:
+            verts = [(v.x, v.y, v.z) for v in face.vertices]
+            poly = Poly3DCollection([verts],
+                                    facecolor='yellow',
+                                    edgecolor='black',
+                                    linewidth=0.6,
+                                    alpha=0.4)
+            ax.add_collection3d(poly)
+
+    # ─────────────────────────────────────────
+    # 3) ELEMENTO CENTRAL → faces sólidas
+    # ─────────────────────────────────────────
+    for face in elemento.faces:
+        verts = [(v.x, v.y, v.z) for v in face.vertices]
+        poly = Poly3DCollection([verts],
+                                facecolor='red',
+                                edgecolor='black',
+                                linewidth=1.0,
+                                alpha=0.9)
+        ax.add_collection3d(poly)
 
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
     ax.set_zlabel("Z")
     ax.set_box_aspect([1, 1, 1])
+    plt.tight_layout()
     plt.show()
+
 
 def visualiza_algoritmo(
     face_referencia: Poligono,
