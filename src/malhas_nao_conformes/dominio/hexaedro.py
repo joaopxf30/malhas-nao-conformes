@@ -14,7 +14,7 @@ class Hexaedro(Poliedro):
 
         super().__init__(faces)
 
-    def __obtem_centro_massa(self) -> Ponto:
+    def _obtem_centro_massa(self) -> Ponto:
         coordenadas_x = []
         coordenadas_y = []
         coordenadas_z = []

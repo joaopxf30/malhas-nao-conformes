@@ -1,10 +1,31 @@
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-import matplotlib.pyplot as plt
-
+from src.malhas_nao_conformes.dominio.poliedro import Poliedro
 from src.malhas_nao_conformes.dominio.poligono import Poligono
 from src.malhas_nao_conformes.dominio.segmento import Segmento
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import matplotlib.pyplot as plt
+
+
+def plota_malha(malha: list[Poliedro]):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    for hexa in malha:
+        for face in hexa.faces:
+            verts = [(v.x, v.y, v.z) for v in face.vertices]
+            poly = Poly3DCollection([verts],
+                                    facecolor='yellow',
+                                    edgecolor='black',
+                                    linewidth=0.6,
+                                    alpha=0.4)
+            ax.add_collection3d(poly)
+
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.set_zlabel("Z")
+    ax.set_box_aspect([1, 1, 1])
+    plt.tight_layout()
+    plt.show()
+
 
 def plota_adjacencias(malha, elemento, vizinhos):
     fig = plt.figure()

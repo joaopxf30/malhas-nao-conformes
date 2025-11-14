@@ -1,7 +1,5 @@
-from plot import visualiza_algoritmo
 from src.malhas_nao_conformes.dominio.poliedro import Poliedro
 from src.malhas_nao_conformes.dominio.poligono import Poligono
-from src.malhas_nao_conformes.dominio.vetor import Vetor
 from src.sutherland_hodgman import SutherlandHodgman
 
 TOLERANCIA = 1e-3
@@ -10,7 +8,36 @@ TOLERANCIA = 1e-3
 class Malha:
     def __init__(self, elementos: list[Poliedro]):
         self.elementos = elementos
-        self.indexacao_estruturada: dict[Vetor, Poliedro] =
+        self.indexacao: dict[tuple[int, int, int], Poliedro] = self.__gera_indexacao(elementos)
+
+    def __gera_indexacao(self, elementos: list[Poliedro]) -> dict[tuple[int, int, int], Poliedro]:
+        indexacao_estruturada = {}
+        elementos_ordenados = sorted(elementos, key=lambda e: (e.centro.x, e.centro.y, e.centro.z))
+        coord_x_referencia = elementos[0].centro.x
+        coord_y_referencia = elementos[0].centro.y
+        coord_z_referencia = elementos[0].centro.z
+        i, j, k = 1, 1, 1
+
+        for elemento in elementos_ordenados:
+            if elemento.centro.x != coord_x_referencia:
+                coord_x_referencia = elemento.centro.x
+                coord_y_referencia = elemento.centro.y
+                coord_z_referencia = elemento.centro.z
+                i += 1
+
+            if elemento.centro.y != coord_y_referencia:
+                j += 1
+            else:
+                j = 1
+
+                if elemento.centro.z != coord_z_referencia:
+                    k += 1
+                else:
+                    k = 1
+
+            indexacao_estruturada[(i,j,k)] = elemento
+
+        return indexacao_estruturada
 
     def obtem_elementos_adjacentes(self, elemento: Poliedro) -> list[Poliedro] | None:
         elementos_adjacentes = []
@@ -41,5 +68,3 @@ class Malha:
                     elementos_adjacentes.append(elemento)
 
         return elementos_adjacentes
-
-    def
