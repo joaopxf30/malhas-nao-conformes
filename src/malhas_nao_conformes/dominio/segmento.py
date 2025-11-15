@@ -1,7 +1,7 @@
 import numpy as np
-from src.constants import Orientacao
-from src.malhas_nao_conformes.dominio.ponto import Ponto
-from src.malhas_nao_conformes.dominio.vetor import Vetor
+from src import Orientacao
+from src import Ponto
+from src import Vetor
 
 
 class Segmento:

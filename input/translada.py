@@ -1,6 +1,6 @@
-from src.malhas_nao_conformes.dominio.hexaedro import Hexaedro
-from src.malhas_nao_conformes.dominio.ponto import Ponto
-from src.malhas_nao_conformes.dominio.retangulo import Retangulo
+from src import Hexaedro
+from src import Ponto
+from src import Retangulo
 
 
 def translada(
@@ -10,16 +10,16 @@ def translada(
     deslocamento_z: float
 ) -> Hexaedro:
     retangulos = []
-    for faces in paralelepipedo.faces:
+    for face in paralelepipedo.faces:
         vertices = []
 
-        for vertice in faces.vertices:
+        for vertice in face.vertices:
             x = vertice.x + deslocamento_x
             y = vertice.y + deslocamento_y
             z = vertice.z + deslocamento_z
             vertices.append(Ponto(x, y, z))
 
-        retangulos.append(Retangulo(vertices))
+        retangulos.append(Retangulo(vertices, face.indice))
 
     return Hexaedro(retangulos)
 

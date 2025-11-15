@@ -1,4 +1,4 @@
-from src.constants import Orientacao
+from src.malhas_nao_conformes.constants import Orientacao
 from src.malhas_nao_conformes.dominio.poligono import Poligono
 from src.malhas_nao_conformes.dominio.ponto import Ponto
 from src.malhas_nao_conformes.dominio.retangulo import Retangulo

@@ -1,13 +1,14 @@
-from src.malhas_nao_conformes.dominio.ponto import Ponto
-from src.malhas_nao_conformes.dominio.poligono import Poligono
+from src import Indice
+from src import Ponto
+from src import Poligono
 
 
 class Retangulo(Poligono):
-    def __init__(self, vertices: list[Ponto]):
+    def __init__(self, vertices: list[Ponto], indice: Indice):
         if len(vertices) != 4:
             raise ValueError("Retângulo só admite quatro vértices")
 
-        super().__init__(vertices)
+        super().__init__(vertices, indice)
 
     def __key(self):
         return self.vertices[0], self.vertices[1], self.vertices[2], self.vertices[3]

@@ -1,6 +1,7 @@
-from src.malhas_nao_conformes.dominio.poliedro import Poliedro
-from src.malhas_nao_conformes.dominio.ponto import Ponto
-from src.malhas_nao_conformes.dominio.retangulo import Retangulo
+from src import Indice
+from src import Poliedro
+from src import Ponto
+from src import Retangulo
 
 
 class Hexaedro(Poliedro):
@@ -79,12 +80,12 @@ class Hexaedro(Poliedro):
             else:
                 vertices_z_max.append(vertice)
 
-        face_x_min = Retangulo(__ordena_vertices_face_minima(vetices_x_min))
-        face_y_min = Retangulo(__ordena_vertices_face_minima(vertices_y_min))
-        face_z_min = Retangulo(__ordena_vertices_face_minima(vertices_z_min))
-        face_x_max = Retangulo(__ordena_vertices_face_maxima(vertices_x_max))
-        face_y_max = Retangulo(__ordena_vertices_face_maxima(vertices_y_max))
-        face_z_max = Retangulo(__ordena_vertices_face_maxima(vertices_z_max))
+        face_x_min = Retangulo(__ordena_vertices_face_minima(vetices_x_min), Indice(x=-1))
+        face_y_min = Retangulo(__ordena_vertices_face_minima(vertices_y_min), Indice(y=-1))
+        face_z_min = Retangulo(__ordena_vertices_face_minima(vertices_z_min), Indice(z=-1))
+        face_x_max = Retangulo(__ordena_vertices_face_maxima(vertices_x_max), Indice(x=1))
+        face_y_max = Retangulo(__ordena_vertices_face_maxima(vertices_y_max), Indice(y=1))
+        face_z_max = Retangulo(__ordena_vertices_face_maxima(vertices_z_max), Indice(z=1))
 
         faces = [face_x_min, face_y_min, face_z_min, face_x_max, face_y_max, face_z_max]
 

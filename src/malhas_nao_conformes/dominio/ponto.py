@@ -1,4 +1,4 @@
-from src.malhas_nao_conformes.dominio.vetor import Vetor
+from src import Vetor
 
 
 class Ponto:

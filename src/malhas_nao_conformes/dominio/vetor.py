@@ -58,24 +58,24 @@ class Vetor:
 
         return vetor_unitario
 
-    def obtem_vetor_oposto(self) -> "Vetor":
-        x = -self.x
-        y = -self.y
-        z = -self.z
+    # def obtem_vetor_oposto(self) -> "Vetor":
+    #     x = -self.x
+    #     y = -self.y
+    #     z = -self.z
+    #
+    #     return Vetor(x, y, z)
+
+    # def projeta_na_direcao(self, vetor: "Vetor") -> "Vetor":
+    #     escalar = self.calcula_produto_interno(vetor)
+    #     x = vetor.x * escalar
+    #     y = vetor.y * escalar
+    #     z = vetor.z * escalar
 
         return Vetor(x, y, z)
 
-    def projeta_na_direcao(self, vetor: "Vetor") -> "Vetor":
-        escalar = self.calcula_produto_interno(vetor)
-        x = vetor.x * escalar
-        y = vetor.y * escalar
-        z = vetor.z * escalar
-
-        return Vetor(x, y, z)
-
-    def decompoe_em_base_ortonormal(self, vetor_normal_plano: "Vetor") -> "Vetor":
-        vetor_perpendicular = self.projeta_na_direcao(vetor_normal_plano)
-        vetor_plano = self - vetor_perpendicular
+    # def decompoe_em_base_ortonormal(self, vetor_normal_plano: "Vetor") -> "Vetor":
+    #     vetor_perpendicular = self.projeta_na_direcao(vetor_normal_plano)
+    #     vetor_plano = self - vetor_perpendicular
 
 
 

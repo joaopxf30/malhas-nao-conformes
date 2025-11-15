@@ -1,6 +1,6 @@
-from src.malhas_nao_conformes.dominio.poliedro import Poliedro
-from src.malhas_nao_conformes.dominio.poligono import Poligono
-from src.malhas_nao_conformes.dominio.segmento import Segmento
+from src import Poliedro
+from src import Poligono
+from src import Segmento
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import matplotlib.pyplot as plt
 
@@ -9,20 +9,51 @@ def plota_malha(malha: list[Poliedro]):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
+    xs, ys, zs = [], [], []
+
     for hexa in malha:
         for face in hexa.faces:
             verts = [(v.x, v.y, v.z) for v in face.vertices]
-            poly = Poly3DCollection([verts],
-                                    facecolor='yellow',
-                                    edgecolor='black',
-                                    linewidth=0.6,
-                                    alpha=0.4)
+            xs.extend([v.x for v in face.vertices])
+            ys.extend([v.y for v in face.vertices])
+            zs.extend([v.z for v in face.vertices])
+
+            poly = Poly3DCollection(
+                [verts],
+                facecolor='gray',
+                edgecolor='black',
+                linewidth=0.6,
+                alpha=0.2
+            )
             ax.add_collection3d(poly)
 
+    # -------------------------
+    #  Ajuste dos limites
+    # -------------------------
+    min_x, max_x = min(xs), max(xs)
+    min_y, max_y = min(ys), max(ys)
+    min_z, max_z = min(zs), max(zs)
+
+    # Define um cubo da cena (aspect ratio = 1:1:1)
+    max_range = max(
+        max_x - min_x,
+        max_y - min_y,
+        max_z - min_z
+    ) / 2.0
+
+    mid_x = (max_x + min_x) / 2.0
+    mid_y = (max_y + min_y) / 2.0
+    mid_z = (max_z + min_z) / 2.0
+
+    ax.set_xlim(mid_x - max_range, mid_x + max_range)
+    ax.set_ylim(mid_y - max_range, mid_y + max_range)
+    ax.set_zlim(mid_z - max_range, mid_z + max_range)
+
+    # -------------------------
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
     ax.set_zlabel("Z")
-    ax.set_box_aspect([1, 1, 1])
+
     plt.tight_layout()
     plt.show()
 
@@ -31,17 +62,34 @@ def plota_adjacencias(malha, elemento, vizinhos):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
+    xs, ys, zs = [], [], []
+
     # ─────────────────────────────────────────
     # 1) MALHA → apenas arestas (mais limpo)
     # ─────────────────────────────────────────
-    for hexa in malha:
+    for idx, hexa in enumerate(malha, 1):
         for face in hexa.faces:
-            verts = face.vertices
-            for i in range(len(verts)):
-                v1 = verts[i]
-                v2 = verts[(i + 1) % len(verts)]
-                ax.plot([v1.x, v2.x], [v1.y, v2.y], [v1.z, v2.z],
-                        color='gray', linewidth=0.8, alpha=0.4)
+            verts = [(v.x, v.y, v.z) for v in face.vertices]
+            xs.extend([v.x for v in face.vertices])
+            ys.extend([v.y for v in face.vertices])
+            zs.extend([v.z for v in face.vertices])
+
+            poly = Poly3DCollection([verts],
+                                    facecolor='gray',
+                                    edgecolor='black',
+                                    linewidth=0.6,
+                                    alpha=0.2)
+            ax.add_collection3d(poly)
+
+        # ───────────────────────────
+        # Desenha número do hexaedro
+        # ───────────────────────────
+        todos_vertices = [v for face in hexa.faces for v in face.vertices]
+        cx = sum(v.x for v in todos_vertices) / len(todos_vertices)
+        cy = sum(v.y for v in todos_vertices) / len(todos_vertices)
+        cz = sum(v.z for v in todos_vertices) / len(todos_vertices)
+
+        ax.text(cx, cy, cz, str(idx), color='black', fontsize=10)
 
     # ─────────────────────────────────────────
     # 2) VIZINHOS → faces transparentes
@@ -50,10 +98,10 @@ def plota_adjacencias(malha, elemento, vizinhos):
         for face in hexa.faces:
             verts = [(v.x, v.y, v.z) for v in face.vertices]
             poly = Poly3DCollection([verts],
-                                    facecolor='yellow',
+                                    facecolor='gray',
                                     edgecolor='black',
                                     linewidth=0.6,
-                                    alpha=0.4)
+                                    alpha=0.2)
             ax.add_collection3d(poly)
 
     # ─────────────────────────────────────────
@@ -62,18 +110,35 @@ def plota_adjacencias(malha, elemento, vizinhos):
     for face in elemento.faces:
         verts = [(v.x, v.y, v.z) for v in face.vertices]
         poly = Poly3DCollection([verts],
-                                facecolor='red',
+                                facecolor='salmon',
                                 edgecolor='black',
                                 linewidth=1.0,
                                 alpha=0.9)
         ax.add_collection3d(poly)
 
+    # -------------------------
+    # Ajuste dos limites
+    # -------------------------
+    min_x, max_x = min(xs), max(xs)
+    min_y, max_y = min(ys), max(ys)
+    min_z, max_z = min(zs), max(zs)
+
+    max_range = max(max_x - min_x, max_y - min_y, max_z - min_z) / 2.0
+    mid_x = (max_x + min_x) / 2.0
+    mid_y = (max_y + min_y) / 2.0
+    mid_z = (max_z + min_z) / 2.0
+
+    ax.set_xlim(mid_x - max_range, mid_x + max_range)
+    ax.set_ylim(mid_y - max_range, mid_y + max_range)
+    ax.set_zlim(mid_z - max_range, mid_z + max_range)
+
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
     ax.set_zlabel("Z")
-    ax.set_box_aspect([1, 1, 1])
+
     plt.tight_layout()
     plt.show()
+
 
 
 def visualiza_algoritmo(

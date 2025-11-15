@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from src.malhas_nao_conformes.dominio.poligono import Poligono
-from src.malhas_nao_conformes.dominio.ponto import Ponto
+from src import Poligono
+from src import Ponto
 
 
 class Poliedro(ABC):

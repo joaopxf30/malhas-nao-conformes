@@ -1,16 +1,16 @@
 from abc import ABC, abstractmethod
 from itertools import pairwise
-from src.malhas_nao_conformes.dominio.ponto import Ponto
-from src.malhas_nao_conformes.dominio.segmento import Segmento
-from src.malhas_nao_conformes.dominio.vetor import Vetor
+
+from src import Indice
+from src import Ponto
+from src import Segmento
 
 
 class Poligono(ABC):
-    def __init__(self, vertices: list[Ponto]):
+    def __init__(self, vertices: list[Ponto], indice: Indice):
         self.vertices = vertices
+        self.indice = indice
         self.arestas: list[Segmento] = self._determina_arestas()
-        # self.normal: Vetor = self._determina_normal()
-        # self.centroide: Ponto = self._determina_centroide()
 
     def _determina_arestas(self) -> list[Segmento]:
         ciclo_vertices = [*self.vertices, self.vertices[0]]
@@ -21,18 +21,6 @@ class Poligono(ABC):
             arestas.append(aresta)
 
         return arestas
-
-    # def _determina_normal(self) -> Vetor:
-    #     vetor_inicial = self.arestas[0].ordenamento
-    #     vetor_final = self.arestas[1].ordenamento
-    #     vetor_normal = vetor_inicial.calcula_produto_vetorial(vetor_final)
-    #     vetor_normalizado = vetor_normal.normaliza()
-    #
-    #     return vetor_normalizado
-
-    # @abstractmethod
-    # def _determina_centroide(self) -> Ponto:
-    #     pass
 
     @abstractmethod
     def calcula_area(self) -> float:
