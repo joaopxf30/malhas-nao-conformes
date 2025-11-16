@@ -1,298 +1,290 @@
-from src import Poliedro
-from src import Poligono
-from src import Segmento
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+from matplotlib.patches import Patch
 
 
-def plota_malha(malha: list[Poliedro]):
+def plota_malha_indices(elementos: list, relacao_elemento_indice: dict):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
-    xs, ys, zs = [], [], []
+    # ───────────────────────────────────────────────
+    # 1) Plotar arestas de todos os elementos
+    # ───────────────────────────────────────────────
+    for elemento in elementos:
+        for face in elemento.faces:
+            for aresta in face.arestas:
+                x = [aresta.vertice_inicial.x, aresta.vertice_final.x]
+                y = [aresta.vertice_inicial.y, aresta.vertice_final.y]
+                z = [aresta.vertice_inicial.z,  aresta.vertice_final.z]
 
-    for hexa in malha:
-        for face in hexa.faces:
-            verts = [(v.x, v.y, v.z) for v in face.vertices]
-            xs.extend([v.x for v in face.vertices])
-            ys.extend([v.y for v in face.vertices])
-            zs.extend([v.z for v in face.vertices])
+                ax.plot(x, y, z, color="black", linewidth=1)
 
-            poly = Poly3DCollection(
-                [verts],
-                facecolor='gray',
-                edgecolor='black',
-                linewidth=0.6,
-                alpha=0.2
-            )
-            ax.add_collection3d(poly)
+    # ───────────────────────────────────────────────
+    # 2) Plotar índices no centro de cada elemento
+    # ───────────────────────────────────────────────
+    for elemento in elementos:
+        indice = relacao_elemento_indice[elemento]
+        cx, cy, cz = elemento.centro.x, elemento.centro.y, elemento.centro.z
 
-    # -------------------------
-    #  Ajuste dos limites
-    # -------------------------
-    min_x, max_x = min(xs), max(xs)
-    min_y, max_y = min(ys), max(ys)
-    min_z, max_z = min(zs), max(zs)
+        ax.text(cx, cy, cz,
+                f"{indice}",
+                color="red",
+                ha="center", va="center")
 
-    # Define um cubo da cena (aspect ratio = 1:1:1)
-    max_range = max(
-        max_x - min_x,
-        max_y - min_y,
-        max_z - min_z
-    ) / 2.0
-
-    mid_x = (max_x + min_x) / 2.0
-    mid_y = (max_y + min_y) / 2.0
-    mid_z = (max_z + min_z) / 2.0
-
-    ax.set_xlim(mid_x - max_range, mid_x + max_range)
-    ax.set_ylim(mid_y - max_range, mid_y + max_range)
-    ax.set_zlim(mid_z - max_range, mid_z + max_range)
-
-    # -------------------------
+    # ───────────────────────────────────────────────
+    # 3) Ajustes visuais
+    # ───────────────────────────────────────────────
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
     ax.set_zlabel("Z")
+    ax.set_box_aspect([1, 1, 1])  # mantém proporções corretas
 
-    plt.tight_layout()
     plt.show()
 
 
-def plota_adjacencias(malha, elemento, vizinhos):
+def plota_malha_arestas_destacando(elementos: list, elemento_destacado):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
-    xs, ys, zs = [], [], []
+    # ───────────────────────────────────────────────
+    # 1) Plotar toda a malha como wireframe cinza
+    # ───────────────────────────────────────────────
+    for elemento in elementos:
+        for face in elemento.faces:
+            for aresta in face.arestas:
+                x = [aresta.vertice_inicial.x, aresta.vertice_final.x]
+                y = [aresta.vertice_inicial.y, aresta.vertice_final.y]
+                z = [aresta.vertice_inicial.z, aresta.vertice_final.z]
 
-    # ─────────────────────────────────────────
-    # 1) MALHA → apenas arestas (mais limpo)
-    # ─────────────────────────────────────────
-    for idx, hexa in enumerate(malha, 1):
-        for face in hexa.faces:
-            verts = [(v.x, v.y, v.z) for v in face.vertices]
-            xs.extend([v.x for v in face.vertices])
-            ys.extend([v.y for v in face.vertices])
-            zs.extend([v.z for v in face.vertices])
+                ax.plot(x, y, z, color=(0, 0, 0, 0.25), linewidth=0.8)
 
-            poly = Poly3DCollection([verts],
-                                    facecolor='gray',
-                                    edgecolor='black',
-                                    linewidth=0.6,
-                                    alpha=0.2)
-            ax.add_collection3d(poly)
-
-        # ───────────────────────────
-        # Desenha número do hexaedro
-        # ───────────────────────────
-        todos_vertices = [v for face in hexa.faces for v in face.vertices]
-        cx = sum(v.x for v in todos_vertices) / len(todos_vertices)
-        cy = sum(v.y for v in todos_vertices) / len(todos_vertices)
-        cz = sum(v.z for v in todos_vertices) / len(todos_vertices)
-
-        ax.text(cx, cy, cz, str(idx), color='black', fontsize=10)
-
-    # ─────────────────────────────────────────
-    # 2) VIZINHOS → faces transparentes
-    # ─────────────────────────────────────────
-    for hexa in vizinhos:
-        for face in hexa.faces:
-            verts = [(v.x, v.y, v.z) for v in face.vertices]
-            poly = Poly3DCollection([verts],
-                                    facecolor='gray',
-                                    edgecolor='black',
-                                    linewidth=0.6,
-                                    alpha=0.2)
-            ax.add_collection3d(poly)
-
-    # ─────────────────────────────────────────
-    # 3) ELEMENTO CENTRAL → faces sólidas
-    # ─────────────────────────────────────────
-    for face in elemento.faces:
+    # ───────────────────────────────────────────────
+    # 2) Pintar o hexaedro destacado
+    # ───────────────────────────────────────────────
+    for face in elemento_destacado.faces:
         verts = [(v.x, v.y, v.z) for v in face.vertices]
-        poly = Poly3DCollection([verts],
-                                facecolor='salmon',
-                                edgecolor='black',
-                                linewidth=1.0,
-                                alpha=0.9)
+
+        poly = Poly3DCollection(
+            [verts],
+            facecolors=(1, 0, 0, 0.35),   # vermelho suave (alpha 0.35)
+            edgecolors="black",      # aresta em vermelho
+            linewidths=1.2
+        )
         ax.add_collection3d(poly)
 
-    # -------------------------
-    # Ajuste dos limites
-    # -------------------------
-    min_x, max_x = min(xs), max(xs)
-    min_y, max_y = min(ys), max(ys)
-    min_z, max_z = min(zs), max(zs)
-
-    max_range = max(max_x - min_x, max_y - min_y, max_z - min_z) / 2.0
-    mid_x = (max_x + min_x) / 2.0
-    mid_y = (max_y + min_y) / 2.0
-    mid_z = (max_z + min_z) / 2.0
-
-    ax.set_xlim(mid_x - max_range, mid_x + max_range)
-    ax.set_ylim(mid_y - max_range, mid_y + max_range)
-    ax.set_zlim(mid_z - max_range, mid_z + max_range)
-
+    # ───────────────────────────────────────────────
+    # 3) Ajuste visual
+    # ───────────────────────────────────────────────
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
     ax.set_zlabel("Z")
+    ax.set_box_aspect([1, 1, 1])
 
+    plt.show()
+
+def plota_malha_com_destaques(malha, elemento_destacado=None, face_destacada=None):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    # ==========================================================
+    # 1) PLOTAR TODA A MALHA APENAS COM ARESTAS (wireframe)
+    # ==========================================================
+    for hexa in malha:
+        for face in hexa.faces:
+            # obter arestas como pares de vértices consecutivos
+            verts = face.vertices
+            for a, b in zip(verts, verts[1:] + verts[:1]):
+                xs = [a.x, b.x]
+                ys = [a.y, b.y]
+                zs = [a.z, b.z]
+                ax.plot(xs, ys, zs, linewidth=0.7, color="black")
+
+    # ==========================================================
+    # 2) PLOTAR UM ÚNICO HEXAEDRO COLORIDO (transparente)
+    # ==========================================================
+    if elemento_destacado:
+        faces = [
+            [(v.x, v.y, v.z) for v in face.vertices]
+            for face in elemento_destacado.faces
+        ]
+        coll = Poly3DCollection(
+            faces,
+            facecolors="cyan",
+            edgecolor="black",
+            alpha=0.25
+        )
+        ax.add_collection3d(coll)
+
+    # ==========================================================
+    # 3) PLOTAR UMA ÚNICA FACE DESTACADA (bem marcada)
+    # ==========================================================
+    if face_destacada:
+        face_coords = [(v.x, v.y, v.z) for v in face_destacada.vertices]
+        coll_face = Poly3DCollection(
+            [face_coords],
+            facecolors="red",
+            edgecolor="black",
+            linewidths=2,
+            alpha=0.7
+        )
+        ax.add_collection3d(coll_face)
+
+    # ==========================================================
+    # Ajustes de visualização
+    # ==========================================================
+    ax.set_box_aspect([1, 1, 1])  # mantém o cubo quadrado
     plt.tight_layout()
     plt.show()
 
 
-
-def visualiza_algoritmo(
-    face_referencia: Poligono,
-    face_incidente: Poligono,
-    segmento: Segmento = None,
-    paralelepipedos: list = None
-):
+def plota_arestas_com_destaques(elementos, elemento_destacado=None, face_destacada_1=None, face_destacada_2=None):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
-    # === Faces de referência e incidente ===
-    coords_ref = [[p.x, p.y, p.z] for p in face_referencia.vertices]
-    coords_inc = [[p.x, p.y, p.z] for p in face_incidente.vertices]
+    # ==========================================================
+    # 1) PLOTAR TODA A MALHA APENAS COM ARESTAS (wireframe)
+    # ==========================================================
+    for elemento in elementos:
+        for face in elemento.faces:
+            verts = face.vertices
+            for a, b in zip(verts, verts[1:] + verts[:1]):
+                xs = [a.x, b.x]
+                ys = [a.y, b.y]
+                zs = [a.z, b.z]
+                ax.plot(xs, ys, zs, linewidth=0.7, color="black")
 
-    ax.add_collection3d(
-        Poly3DCollection([coords_ref], facecolors='magenta', alpha=0.5, edgecolors='k', linewidths=1)
-    )
-    ax.add_collection3d(
-        Poly3DCollection([coords_inc], facecolors='blue', alpha=0.5, edgecolors='k', linewidths=1)
-    )
-
-    # === Segmento único (interseção) ===
-    seg_coords = []
-    if segmento:
-        seg_coords = [
-            [segmento.vertice_inicial.x, segmento.vertice_inicial.y, segmento.vertice_inicial.z],
-            [segmento.vertice_final.x, segmento.vertice_final.y, segmento.vertice_final.z],
+    # ==========================================================
+    # 2) DESTACAR UM ELEMENTO (hexaedro) INTEIRO
+    # ==========================================================
+    if elemento_destacado:
+        faces = [
+            [(v.x, v.y, v.z) for v in face.vertices]
+            for face in elemento_destacado.faces
         ]
-        xs, ys, zs = zip(*seg_coords)
-        ax.plot(xs, ys, zs, color='red', linewidth=3, label='Segmento')
+        coll = Poly3DCollection(
+            faces,
+            facecolors="cyan",
+            edgecolor="black",
+            alpha=0.25
+        )
+        ax.add_collection3d(coll)
 
-    if paralelepipedos:
-        for cubo in paralelepipedos:
-            for face in cubo.faces:
-                # cada face é um Polígono com seus vértices
-                vertices = face.vertices
-                for i in range(len(vertices)):
-                    v1 = vertices[i]
-                    v2 = vertices[(i + 1) % len(vertices)]  # conecta em loop
-                    ax.plot(
-                        [v1.x, v2.x],
-                        [v1.y, v2.y],
-                        [v1.z, v2.z],
-                        color='gray',
-                        alpha=0.7,
-                        linewidth=1
-                    )
+    # ==========================================================
+    # 3) DESTACAR UMA FACE
+    # ==========================================================
+    if face_destacada_1:
+        coords = [(v.x, v.y, v.z) for v in face_destacada_1.vertices]
+        coll_face = Poly3DCollection(
+            [coords],
+            facecolors="blue",
+            edgecolor="black",
+            linewidths=2,
+            alpha=0.7
+        )
+        ax.add_collection3d(coll_face)
 
-    # === Ajuste automático dos limites ===
-    todos_pontos = coords_ref + coords_inc + (seg_coords if seg_coords else [])
-    if paralelepipedos:
-        for cubo in paralelepipedos:
-            for face in cubo.faces:
-                for v in face.vertices:
-                    todos_pontos.append([v.x, v.y, v.z])
+    # ==========================================================
+    # 4) DESTACAR UMA OUTRA FACE
+    # ==========================================================
+    if face_destacada_2:
+        coords = [(v.x, v.y, v.z) for v in face_destacada_2.vertices]
+        coll_face = Poly3DCollection(
+            [coords],
+            facecolors="red",
+            edgecolor="black",
+            linewidths=2,
+            alpha=0.7
+        )
+        ax.add_collection3d(coll_face)
 
-    xs_all, ys_all, zs_all = zip(*todos_pontos)
-    ax.set_xlim(min(xs_all) - 0.5, max(xs_all) + 0.5)
-    ax.set_ylim(min(ys_all) - 0.5, max(ys_all) + 0.5)
-    ax.set_zlim(min(zs_all) - 0.5, max(zs_all) + 0.5)
-
-    # === Estilo e rótulos ===
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('Z')
-    plt.title('Visualização do Algoritmo Sutherland–Hodgman 3D')
-
-    handles, labels = ax.get_legend_handles_labels()
-    if handles:
-        ax.legend()
+    # ==========================================================
+    # Ajuste visual
+    # ==========================================================
+    ax.set_box_aspect([1, 1, 1])
+    plt.tight_layout()
     plt.show()
 
-def visualiza_algoritmo_2(
-    segmento_referente: Segmento,
-    segmento_incidente: Segmento,
-    face_incidente: Poligono,
+
+def plota_malha_elemento_vizinhos(
+    elementos: list,
+    elemento_principal,
+    relacao_vizinhanca: list[tuple]  # (vizinho, area_de_contato)
 ):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
-    # === Faces de referência e incidente ===
-    normal = face_incidente.normal
-    centroide = face_incidente.centroide
-    coords_inc = [[p.x, p.y, p.z] for p in face_incidente.vertices]
+    # ======================================================
+    # 1) ARESTAS DA MALHA (wireframe)
+    # ======================================================
+    for elemento in elementos:
+        for face in elemento.faces:
+            vs = face.vertices
+            for a, b in zip(vs, vs[1:] + vs[:1]):
+                ax.plot(
+                    [a.x, b.x],
+                    [a.y, b.y],
+                    [a.z, b.z],
+                    color="black",
+                    linewidth=0.6
+                )
 
-    ax.add_collection3d(
-        Poly3DCollection([coords_inc], facecolors='lightgray', alpha=0.5, edgecolors='k', linewidths=1)
+    # ======================================================
+    # 2) ELEMENTO PRINCIPAL (pintado)
+    # ======================================================
+    faces_principal = [
+        [(v.x, v.y, v.z) for v in face.vertices]
+        for face in elemento_principal.faces
+    ]
+    coll_principal = Poly3DCollection(
+        faces_principal,
+        facecolors="yellow",
+        edgecolor="black",
+        linewidths=1.2,
+        alpha=0.45
     )
+    ax.add_collection3d(coll_principal)
 
-    # === Segmento referente (vermelho, como vetor) ===
-    v_ref = segmento_referente.ordenamento  # diferença entre final e inicial
-    ax.quiver(
-        segmento_referente.vertice_inicial.x,
-        segmento_referente.vertice_inicial.y,
-        segmento_referente.vertice_inicial.z,
-        v_ref.x, v_ref.y, v_ref.z,
-        color='red',
-        linewidth=3,
-        arrow_length_ratio=0.15,
-        label='Segmento referente'
-    )
-
-    # === Segmento incidente (azul, como vetor) ===
-    v_inc = segmento_incidente.ordenamento
-    ax.quiver(
-        segmento_incidente.vertice_inicial.x,
-        segmento_incidente.vertice_inicial.y,
-        segmento_incidente.vertice_inicial.z,
-        v_inc.x, v_inc.y, v_inc.z,
-        color='blue',
-        linewidth=3,
-        arrow_length_ratio=0.15,
-        label='Segmento incidente'
-    )
-
-    # === Vetor normal da face (preto) ===
-    escala = 0.5
-    ax.quiver(
-        centroide.x, centroide.y, centroide.z,
-        normal.x, normal.y, normal.z,
-        length=escala,
-        color='black',
-        linewidth=3,
-        arrow_length_ratio=0.3,
-        label='Normal da face'
-    )
-
-    # === Ajuste automático dos limites ===
-    todos_pontos = coords_inc + [
-        [segmento_referente.vertice_inicial.x, segmento_referente.vertice_inicial.y, segmento_referente.vertice_inicial.z],
-        [segmento_referente.vertice_final.x, segmento_referente.vertice_final.y, segmento_referente.vertice_final.z],
-        [segmento_incidente.vertice_inicial.x, segmento_incidente.vertice_inicial.y, segmento_incidente.vertice_inicial.z],
-        [segmento_incidente.vertice_final.x, segmento_incidente.vertice_final.y, segmento_incidente.vertice_final.z],
-        [
-            centroide.x + normal.x * escala,
-            centroide.y + normal.y * escala,
-            centroide.z + normal.z * escala,
-        ]
+    # ======================================================
+    # 3) ELEMENTOS VIZINHOS (pintados com outra cor)
+    # ======================================================
+    legend_handles = [
+        Patch(facecolor="yellow", edgecolor="black", label="Elemento Principal")
     ]
 
-    xs_all, ys_all, zs_all = zip(*todos_pontos)
-    ax.set_xlim(min(xs_all) - 0.5, max(xs_all) + 0.5)
-    ax.set_ylim(min(ys_all) - 0.5, max(ys_all) + 0.5)
-    ax.set_zlim(min(zs_all) - 0.5, max(zs_all) + 0.5)
+    for vizinho, regiao in relacao_vizinhanca:
+        faces_viz = [
+            [(v.x, v.y, v.z) for v in face.vertices]
+            for face in vizinho.faces
+        ]
+        coll_viz = Poly3DCollection(
+            faces_viz,
+            facecolors="cyan",
+            edgecolor="black",
+            linewidths=1.0,
+            alpha=0.35
+        )
+        ax.add_collection3d(coll_viz)
 
-    # === Estilo e rótulos ===
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('Z')
-    plt.title('Visualização do Algoritmo Sutherland–Hodgman 3D')
+        # ---------------------------------------------
+        # Colocar rótulo no centro do vizinho
+        # ---------------------------------------------
+        cx, cy, cz = vizinho.centro.x, vizinho.centro.y, vizinho.centro.z
+        ax.text(cx, cy, cz, f"{regiao.calcula_area():.3g}", color="blue")
 
-    handles, labels = ax.get_legend_handles_labels()
-    if handles:
-        ax.legend()
+        legend_handles.append(
+            Patch(facecolor="cyan", edgecolor="black", label=f"Vizinho (área={regiao.calcula_area():.3g})")
+        )
+
+    # ======================================================
+    # 4) Ajustes de visual e legenda
+    # ======================================================
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.set_zlabel("Z")
+    ax.set_box_aspect([1, 1, 1])
+
+    plt.legend(handles=legend_handles, loc="upper left", bbox_to_anchor=(1.05, 1))
+    plt.tight_layout()
     plt.show()
+
 

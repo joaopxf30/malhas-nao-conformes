@@ -1,7 +1,7 @@
-from src import Indice
-from src import Poliedro
-from src import Ponto
-from src import Retangulo
+from src.malhas_nao_conformes.dominio.indice import Indice
+from src.malhas_nao_conformes.dominio.poliedro import Poliedro
+from src.malhas_nao_conformes.dominio.ponto import Ponto
+from src.malhas_nao_conformes.dominio.retangulo import Retangulo
 
 
 class Hexaedro(Poliedro):
@@ -25,9 +25,9 @@ class Hexaedro(Poliedro):
             coordenadas_y.append(vertice.y)
             coordenadas_z.append(vertice.z)
 
-        x = sum(coordenadas_x)/len(coordenadas_x)
-        y = sum(coordenadas_y)/len(coordenadas_y)
-        z = sum(coordenadas_z)/len(coordenadas_z)
+        x = round(sum(coordenadas_x)/len(coordenadas_x),6)
+        y = round(sum(coordenadas_y)/len(coordenadas_y),6)
+        z = round(sum(coordenadas_z)/len(coordenadas_z),6)
 
         return Ponto(x,y,z)
 

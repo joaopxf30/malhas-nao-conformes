@@ -1,18 +1,28 @@
 from abc import ABC, abstractmethod
 from itertools import pairwise
 
-from src import Indice
-from src import Ponto
-from src import Segmento
+from src.malhas_nao_conformes.dominio.vetor import Vetor
+from src.malhas_nao_conformes.dominio.indice import Indice
+from src.malhas_nao_conformes.dominio.ponto import Ponto
+from src.malhas_nao_conformes.dominio.segmento import Segmento
 
 
 class Poligono(ABC):
-    def __init__(self, vertices: list[Ponto], indice: Indice):
+    def __init__(self, vertices: list[Ponto], indice: Indice = None):
         self.vertices = vertices
         self.indice = indice
-        self.arestas: list[Segmento] = self._determina_arestas()
+        self.arestas: list[Segmento] = self.__determina_arestas()
+        self.normal: Vetor = self.__determina_normal()
 
-    def _determina_arestas(self) -> list[Segmento]:
+    @abstractmethod
+    def calcula_area(self) -> float:
+        pass
+
+    @abstractmethod
+    def checa_potencial_adjacencia(self, poligono: "Poligono") -> bool:
+        pass
+
+    def __determina_arestas(self) -> list[Segmento]:
         ciclo_vertices = [*self.vertices, self.vertices[0]]
         arestas = []
 
@@ -22,6 +32,10 @@ class Poligono(ABC):
 
         return arestas
 
-    @abstractmethod
-    def calcula_area(self) -> float:
-        pass
+    def __determina_normal(self) -> Vetor:
+        vetor_inicial = self.arestas[0].ordenamento
+        vetor_final = self.arestas[1].ordenamento
+        vetor_normal = vetor_inicial.calcula_produto_vetorial(vetor_final)
+        vetor_normalizado = vetor_normal.normaliza()
+
+        return vetor_normalizado

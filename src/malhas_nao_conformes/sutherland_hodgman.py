@@ -8,7 +8,7 @@ from src.malhas_nao_conformes.dominio.vetor import Vetor
 
 class SutherlandHodgman:
 
-    def recorte_geometrico(
+    def obtem_regiao_contato(
         self,
         face_referencia: Poligono,
         face_incidente: Poligono
