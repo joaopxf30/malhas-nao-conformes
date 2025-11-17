@@ -25,9 +25,9 @@ class Hexaedro(Poliedro):
             coordenadas_y.append(vertice.y)
             coordenadas_z.append(vertice.z)
 
-        x = round(sum(coordenadas_x)/len(coordenadas_x),6)
-        y = round(sum(coordenadas_y)/len(coordenadas_y),6)
-        z = round(sum(coordenadas_z)/len(coordenadas_z),6)
+        x = round(sum(coordenadas_x)/len(coordenadas_x),8)
+        y = round(sum(coordenadas_y)/len(coordenadas_y),8)
+        z = round(sum(coordenadas_z)/len(coordenadas_z),8)
 
         return Ponto(x,y,z)
 

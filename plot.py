@@ -1,45 +1,149 @@
+from matplotlib.patches import Patch
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-from matplotlib.patches import Patch
+import numpy as np
+
+
+def plota_malha_elemento_destacado(elementos, elemento_destacado):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.view_init(elev=20, azim=50)
+
+    # ----------------------------------------------------
+    # 1) Elemento destacado (por baixo)
+    # ----------------------------------------------------
+    for face in elemento_destacado.faces:
+        verts = [(v.x, v.y, v.z) for v in face.vertices]
+        poly = Poly3DCollection(
+            [verts],
+            facecolor="salmon",
+            edgecolor="black",
+            linewidth=1.4,
+            alpha=0.9,
+            zsort="min",   # fica atrás
+            zorder=1       # mais baixo
+        )
+        ax.add_collection3d(poly)
+
+    # ----------------------------------------------------
+    # 2) Resto dos elementos (por cima)
+    # ----------------------------------------------------
+    for elem in elementos:
+        if elem is elemento_destacado:
+            continue
+
+        for face in elem.faces:
+            verts = [(v.x, v.y, v.z) for v in face.vertices]
+            poly = Poly3DCollection(
+                [verts],
+                facecolor="lightgray",
+                edgecolor="black",
+                alpha=0.2,
+                zsort="max",   # mais à frente
+                zorder=10      # mais alto
+            )
+            ax.add_collection3d(poly)
+
+    # ----------------------------------------------------
+    # 3) Grid (sempre por cima de tudo exceto números)
+    # ----------------------------------------------------
+    for elem in elementos:
+        for face in elem.faces:
+            vs = face.vertices
+            xs = [v.x for v in vs] + [vs[0].x]
+            ys = [v.y for v in vs] + [vs[0].y]
+            zs = [v.z for v in vs] + [vs[0].z]
+            ax.plot(xs, ys, zs, color="dimgray", linewidth=1.1, zorder=20)
+
+    # ----------------------------------------------------
+    # 4) Ticks de 2 em 2
+    # ----------------------------------------------------
+    xs = [v.x for e in elementos for f in e.faces for v in f.vertices]
+    ys = [v.y for e in elementos for f in e.faces for v in f.vertices]
+    zs = [v.z for e in elementos for f in e.faces for v in f.vertices]
+
+    ax.set_xticks(np.arange(int(min(xs)), int(max(xs))+1, 2))
+    ax.set_yticks(np.arange(int(min(ys)), int(max(ys))+1, 2))
+    ax.set_zticks(np.arange(int(min(zs)), int(max(zs))+1, 2))
+
+    ax.set_xlabel(r"$x$")
+    ax.set_ylabel(r"$y$")
+    ax.set_zlabel(r"$z$")
+
+    # ----------------------------------------------------
+    # 5) Título em LaTeX (sem bold)
+    # ----------------------------------------------------
+
+    plt.tight_layout()
+    plt.savefig("malha_elemento_processar.pdf", dpi=300, format="pdf")
+    plt.show()
+
 
 
 def plota_malha_indices(elementos: list, relacao_elemento_indice: dict):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
-    # ───────────────────────────────────────────────
-    # 1) Plotar arestas de todos os elementos
-    # ───────────────────────────────────────────────
+    # -------------------------------------------------------
+    # 1) Plotar interior do elemento (faces preenchidas)
+    # -------------------------------------------------------
+    for elemento in elementos:
+        poly3d = []
+        for face in elemento.faces:
+            verts = [(v.x, v.y, v.z) for v in face.vertices]
+            poly3d.append(verts)
+
+        collection = Poly3DCollection(
+            poly3d,
+            facecolors="salmon",
+            edgecolors="black",
+            linewidths=1,
+            alpha=0.4   # transparência para ver o índice por dentro
+        )
+        ax.add_collection3d(collection)
+
+    # -------------------------------------------------------
+    # 2) Arestas (wireframe) - opcional se quiser reforçar
+    # -------------------------------------------------------
     for elemento in elementos:
         for face in elemento.faces:
             for aresta in face.arestas:
                 x = [aresta.vertice_inicial.x, aresta.vertice_final.x]
                 y = [aresta.vertice_inicial.y, aresta.vertice_final.y]
-                z = [aresta.vertice_inicial.z,  aresta.vertice_final.z]
-
+                z = [aresta.vertice_inicial.z, aresta.vertice_final.z]
                 ax.plot(x, y, z, color="black", linewidth=1)
 
-    # ───────────────────────────────────────────────
-    # 2) Plotar índices no centro de cada elemento
-    # ───────────────────────────────────────────────
+    # -------------------------------------------------------
+    # 3) Texto com fundo branco (caixa) SOBREPOSTO
+    # -------------------------------------------------------
     for elemento in elementos:
         indice = relacao_elemento_indice[elemento]
         cx, cy, cz = elemento.centro.x, elemento.centro.y, elemento.centro.z
 
-        ax.text(cx, cy, cz,
-                f"{indice}",
-                color="red",
-                ha="center", va="center")
+        ax.text(
+            cx, cy, cz, f"{indice}",
+            color="black",
+            fontsize=10,
+            ha="center", va="center",
+            bbox=dict(
+                facecolor="white",
+                edgecolor="black",
+                boxstyle="round,pad=0.2",
+                alpha=0.95    # quase sólido
+            ),
+        )
 
-    # ───────────────────────────────────────────────
-    # 3) Ajustes visuais
-    # ───────────────────────────────────────────────
+    # -------------------------------------------------------
+    # 4) Ajustes visuais
+    # -------------------------------------------------------
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
     ax.set_zlabel("Z")
-    ax.set_box_aspect([1, 1, 1])  # mantém proporções corretas
+    ax.set_box_aspect([1, 1, 1])
 
     plt.show()
+
+
 
 
 def plota_malha_arestas_destacando(elementos: list, elemento_destacado):

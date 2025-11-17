@@ -1,6 +1,7 @@
 import random
 from src.malhas_nao_conformes.malha import Malha
 
+random.seed(52)
 
 def cria_malha(
     comprimento_malha: float,
@@ -14,7 +15,7 @@ def cria_malha(
 ) -> Malha:
     if translacoes_z:
         translacoes_z_colunas_xy = [
-            random.uniform(-0.5, 0.5) for _ in range(
+            random.uniform(-0.5, 0.5) * altura_malha/numero_elementos_z for _ in range(
                 numero_elementos_x * numero_elementos_y
             )
         ]
@@ -23,7 +24,7 @@ def cria_malha(
 
     if translacoes_yz:
         translacoes_y_colunas_x = [
-            random.uniform(-0.5, 0.5) for _ in range(
+            random.uniform(-0.5, 0.5) *largura_malha/numero_elementos_y for _ in range(
                 numero_elementos_x
             )
         ]

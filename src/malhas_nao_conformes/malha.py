@@ -71,7 +71,7 @@ class Malha:
         face: Poligono,
     ) -> Poligono | None:
         face_incidente = elemento_vizinho.relacao_indice_face.get(face.indice * -1)
-        # plota_arestas_com_destaques(self.elementos, elemento_vizinho, face_incidente, face)
+        plota_arestas_com_destaques(self.elementos, elemento_vizinho, face_incidente, face)
 
         if face.checa_potencial_adjacencia(face_incidente):
             regiao = SutherlandHodgman().obtem_regiao_contato(face, face_incidente)
