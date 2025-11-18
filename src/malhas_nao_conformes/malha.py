@@ -1,6 +1,7 @@
 from copy import deepcopy
 from collections import deque
-from plot import plota_malha_arestas_destacando, plota_arestas_com_destaques
+
+from plot import plota_malha_elemento_destacado
 from src.malhas_nao_conformes.dominio import Ponto, Hexaedro
 from src.malhas_nao_conformes.dominio.indice import Indice
 from src.malhas_nao_conformes.dominio.poliedro import Poliedro
@@ -25,8 +26,6 @@ class Malha:
         i, j, k = 1, 1, 1
 
         for elemento in elementos_ordenados:
-            # plota_malha_arestas_destacando(self.elementos, elemento)
-
             if elemento.centro.x != coord_x_referencia:
                 coord_x_referencia = elemento.centro.x
                 coord_y_referencia = elemento.centro.y
@@ -50,7 +49,6 @@ class Malha:
     def obtem_regioes_contato_celula(self, elemento: Poliedro) -> list[tuple[Poliedro, Poligono, float]] | None:
         regioes = []
         for face in elemento.faces:
-            # plota_arestas_com_destaques(self.elementos, elemento, face)
             incremento = face.indice
             indice_elemento_vizinho = self.relacao_elemento_indice[elemento] + incremento
             elemento_vizinho = self.relacao_indice_elemento.get(indice_elemento_vizinho)
@@ -58,7 +56,7 @@ class Malha:
             if elemento_vizinho is None:
                 continue
 
-            if regiao := self.obtem_regiao_contato_face(elemento_vizinho, face):
+            if regiao := self.obtem_regiao_contato_face(elemento_vizinho, face, elemento):
                 regioes.append((face, elemento_vizinho, regiao))
                 incrementos = incremento.obtem_indices_perpendiculares()
                 regioes.extend(self.busca_celulas_em_largura(elemento_vizinho, incrementos, face))
@@ -69,9 +67,11 @@ class Malha:
         self,
         elemento_vizinho: Poliedro,
         face: Poligono,
+        elemento = None
     ) -> Poligono | None:
         face_incidente = elemento_vizinho.relacao_indice_face.get(face.indice * -1)
-        plota_arestas_com_destaques(self.elementos, elemento_vizinho, face_incidente, face)
+
+        plota_malha_elemento_destacado("checagem_elementos", self.elementos, elemento, elemento_vizinho, face, face_incidente)
 
         if face.checa_potencial_adjacencia(face_incidente):
             regiao = SutherlandHodgman().obtem_regiao_contato(face, face_incidente)

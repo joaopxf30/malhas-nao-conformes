@@ -24,7 +24,7 @@ class Segmento:
         else:
             return Orientacao.COLINEAR
 
-    def intersecta(self, segmento: "Segmento", normal_plano: Vetor) -> Ponto:
+    def intersecta_segmento(self, segmento: "Segmento", normal_plano: Vetor) -> Ponto:
 
         def _determina_coeficientes(cooredenda: str):
             _coeficientes = [
@@ -68,6 +68,19 @@ class Segmento:
         termos_independentes = np.array([termo_independente_equacao_1, termo_independente_equacao_2])
 
         escalar, _ = np.linalg.solve(coeficientes, termos_independentes)
+        ponto = self.vertice_inicial + self.ordenamento * escalar
+
+        return ponto
+
+    def intersecta_plano(self, ponto_plano: Ponto, vetor_normal_plano: Vetor) -> Ponto:
+        produto_interno_inicial = vetor_normal_plano.calcula_produto_interno(
+            self.vertice_inicial - ponto_plano
+        )
+        produto_interno_final = vetor_normal_plano.calcula_produto_interno(
+            self.vertice_final - ponto_plano
+        )
+
+        escalar = produto_interno_inicial / (produto_interno_inicial - produto_interno_final)
         ponto = self.vertice_inicial + self.ordenamento * escalar
 
         return ponto

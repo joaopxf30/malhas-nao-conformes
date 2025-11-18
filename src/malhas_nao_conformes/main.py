@@ -1,4 +1,4 @@
-from plot import plota_malha_indices, plota_malha_elemento_vizinhos, plota_malha_elemento_destacado
+from plot import plota_malha_elemento_destacado
 from src.malhas_nao_conformes.dominio import Indice
 from src.malhas_nao_conformes.malha import Malha
 from src.malhas_nao_conformes.utils import cria_malha
@@ -6,10 +6,8 @@ from src.malhas_nao_conformes.utils import cria_malha
 
 def processa_malha(malha: Malha, indice: Indice):
     elemento = malha.relacao_indice_elemento[indice]
-    plota_malha_elemento_destacado(malha.elementos, elemento)
+    # plota_malha_elemento_destacado("malha_elemento_processar", malha.elementos, elemento)
     relacoes_vizinhanca = malha.obtem_regioes_contato_celula(elemento)
-    plota_malha_elemento_vizinhos(malha.elementos, elemento, relacoes_vizinhanca)
-
 
 
 if __name__ == '__main__':
