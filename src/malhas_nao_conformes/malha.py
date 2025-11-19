@@ -1,7 +1,5 @@
 from copy import deepcopy
 from collections import deque
-
-from plot import plota_malha_elemento_destacado
 from src.malhas_nao_conformes.dominio import Ponto, Hexaedro
 from src.malhas_nao_conformes.dominio.indice import Indice
 from src.malhas_nao_conformes.dominio.poliedro import Poliedro
@@ -56,7 +54,7 @@ class Malha:
             if elemento_vizinho is None:
                 continue
 
-            if regiao := self.obtem_regiao_contato_face(elemento_vizinho, face, elemento):
+            if regiao := self.obtem_regiao_contato_face(elemento_vizinho, face):
                 regioes.append((face, elemento_vizinho, regiao))
                 incrementos = incremento.obtem_indices_perpendiculares()
                 regioes.extend(self.busca_celulas_em_largura(elemento_vizinho, incrementos, face))
@@ -67,11 +65,8 @@ class Malha:
         self,
         elemento_vizinho: Poliedro,
         face: Poligono,
-        elemento = None
     ) -> Poligono | None:
         face_incidente = elemento_vizinho.relacao_indice_face.get(face.indice * -1)
-
-        plota_malha_elemento_destacado("checagem_elementos", self.elementos, elemento, elemento_vizinho, face, face_incidente)
 
         if face.checa_potencial_adjacencia(face_incidente):
             regiao = SutherlandHodgman().obtem_regiao_contato(face, face_incidente)
