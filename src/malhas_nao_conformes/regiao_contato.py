@@ -10,34 +10,18 @@ class RegiaoContato:
 
     def __init__(
         self,
-        indice_referencia: Indice,
-        elemento_referencia:Poliedro,
-        informacoes_contato: list[tuple[Poligono, Poliedro, Poligono, Indice, Poligono]],
+        face_referencia: Poligono,
+        face_incidente: Poligono,
+        regiao_intersecao: Poligono,
+        elemento_incidente: Poliedro = None,
+        indice_elemento_incidente: Indice = None,
     ):
-        self.indice_referencia = indice_referencia
-        self.elemento_referencia = elemento_referencia
-
-        self.regiao_contato_por_face: dict[Indice, Poligono] = {}
-
-        self.relacao_indice_elemento_incidente_elemento: dict[Indice, Poliedro] = {}
-        self.relacao_indice_elemento_incidente_area_corte: dict[Indice, float] = {}
-
-        self.__relaciona(informacoes_contato)
+        self.face_referencia = face_referencia
+        self.face_incidente = face_incidente
+        self.regiao_intersecao = regiao_intersecao
+        self.elemento_incidente = elemento_incidente
+        self.indice_elemento_incidente = indice_elemento_incidente
 
     def __str__(self):
-        header = f"O elemento {self.indice_referencia} é vizinho aos elementos: \n"
-        corpo = []
-        for indice in self.relacao_indice_elemento_incidente.keys():
-
-
-    def __relaciona(self, informacoes_contato: list[tuple[Poligono, Poliedro, Poligono, Indice, Poligono]]):
-        for face_referencia, elemento_incidente, face_incidente, indice_elemento_incidente, regiao_corte in informacoes_contato:
-            area_corte = regiao_corte.calcula_area()
-
-            self.relacao_indice_elemento_incidente_elemento[indice_elemento_incidente] = elemento_incidente
-            self.relacao_indice_elemento_incidente_area_corte[indice_elemento_incidente] = area_corte
-
-
-
-
+        return f"Elemento ({self.indice_elemento_incidente}) com área de contato de {self.regiao_intersecao.calcula_area():.4f} u.a."
 

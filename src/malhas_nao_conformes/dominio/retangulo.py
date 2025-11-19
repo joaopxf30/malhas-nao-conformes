@@ -43,8 +43,8 @@ class Retangulo(Poligono):
             max_intervalo_2: float,
         ) -> bool:
             return (
-                min_intervalo_1 <= min_intervalo_2 <= max_intervalo_1
-                or min_intervalo_1 <= max_intervalo_2 <= max_intervalo_1
+                min_intervalo_1 <= min_intervalo_2 < max_intervalo_1
+                or min_intervalo_1 < max_intervalo_2 <= max_intervalo_1
             )
 
         vertice_1 = self.vertices[0]

@@ -1,5 +1,7 @@
 from copy import deepcopy
 from collections import deque
+
+from plot import plota_malha_elemento_destacado
 from src.malhas_nao_conformes.dominio import Ponto, Hexaedro
 from src.malhas_nao_conformes.dominio.indice import Indice
 from src.malhas_nao_conformes.dominio.poliedro import Poliedro
@@ -45,8 +47,8 @@ class Malha:
             self.relacao_indice_elemento[Indice(i,j,k)] = elemento
             self.relacao_elemento_indice[elemento] = Indice(i,j,k)
 
-    def obtem_regioes_contato_celula(self, indice: Indice) -> RegiaoContato:
-        regioes = []
+    def obtem_regioes_contato_celula(self, indice: Indice) -> list[RegiaoContato]:
+        regioes_contato = []
         elemento = self.relacao_indice_elemento[indice]
         for face_referencia in elemento.faces:
             incremento = face_referencia.indice
@@ -57,28 +59,34 @@ class Malha:
                 continue
 
             face_incidente = elemento_incidente.relacao_indice_face.get(incremento * -1)
-            if regiao_corte := self.obtem_regiao_contato_face(face_incidente, face_referencia):
-                regioes.append((face_referencia, elemento_incidente, face_incidente, indice_elemento_incidente, regiao_corte))
+            if regiao_contato := self.obtem_regiao_intersecao_face(face_incidente, face_referencia):
+                regiao_contato.elemento_incidente = elemento_incidente
+                regiao_contato.indice_elemento_incidente = indice_elemento_incidente
+                regioes_contato.append(regiao_contato)
+
                 incrementos = incremento.obtem_indices_perpendiculares()
-                regioes.extend(self.busca_celulas_em_largura(elemento_incidente, incrementos, face_referencia))
+                regioes_contato.extend(self.busca_celulas_em_largura(elemento_incidente, incrementos, face_referencia))
 
-        return RegiaoContato(indice, elemento, regioes)
+        return regioes_contato
 
-    def obtem_regiao_contato_face(
+    def obtem_regiao_intersecao_face(
         self,
         face_incidente: Poligono,
         face_referencia: Poligono,
-    ) -> Poligono | None:
+    ) -> RegiaoContato | None:
         if face_referencia.checa_potencial_adjacencia(face_incidente):
-            regiao = SutherlandHodgman().obtem_regiao_contato(face_referencia, face_incidente)
-            return regiao
+            if regiao_intersecao := SutherlandHodgman().obtem_regiao_intersecao(face_referencia, face_incidente):
+                return RegiaoContato(
+                    face_incidente=face_incidente,
+                    face_referencia=face_referencia,
+                    regiao_intersecao=regiao_intersecao
+                )
 
-        else:
-            return None
+        return None
 
     def busca_celulas_em_largura(
         self, elemento: Poliedro, incrementos: list[Indice], face_referencia: Poligono
-    ) -> list[tuple[Poligono, Poliedro, Poligono, Poligono]]:
+    ) -> list[RegiaoContato]:
         regioes = []
         explorar = deque()
         visitados = set()
@@ -98,8 +106,10 @@ class Malha:
                 else:
                     visitados.add(elemento_incidente)
                     face_incidente = elemento_incidente.relacao_indice_face.get(face_referencia.indice * -1)
-                    if regiao_corte := self.obtem_regiao_contato_face(face_incidente, face_referencia):
-                        regioes.append((face_referencia, elemento_incidente, indice_elemento_incidente, face_incidente, regiao_corte))
+                    if regiao_contato := self.obtem_regiao_intersecao_face(face_incidente, face_referencia):
+                        regiao_contato.elemento_incidente = elemento_incidente
+                        regiao_contato.indice_elemento_incidente = indice_elemento_incidente
+                        regioes.append(regiao_contato)
 
                     else:
                         novos_incrementos.pop(contador)

@@ -1,8 +1,11 @@
+from collections import defaultdict
+
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import numpy as np
 
-from src.malhas_nao_conformes.dominio import Ponto, Vetor, Segmento
+from src.malhas_nao_conformes.dominio import Ponto, Vetor, Segmento, Poliedro
+from src.malhas_nao_conformes.regiao_contato import RegiaoContato
 
 
 def plota_malha_elemento_destacado(
@@ -141,38 +144,39 @@ def plota_recorte(
     # AUXILIARES PARA PROJEÇÃO YZ
     # ============================================================
 
+    # ============================================================
+    # AUXILIARES PARA PROJEÇÃO XY
+    # ============================================================
     def proj(p):
-        """Projeção (x,y,z) -> (y,z)."""
-        return p.y, p.z
+        """Projeção (x,y,z) -> (x,y)."""
+        return p.x, p.y
 
     def desenha_face(face, cor, alpha=0.3, label=None):
+        xs = [v.x for v in face.vertices] + [face.vertices[0].x]
         ys = [v.y for v in face.vertices] + [face.vertices[0].y]
-        zs = [v.z for v in face.vertices] + [face.vertices[0].z]
-        ax.fill(ys, zs, facecolor=cor, edgecolor="black",
+        ax.fill(xs, ys, facecolor=cor, edgecolor="black",
                 linewidth=2.0, alpha=alpha, label=label)
 
     def desenha_segmento(seg, cor, lw=3.0):
-        y0, z0 = proj(seg.vertice_inicial)
-        y1, z1 = proj(seg.vertice_final)
-        ax.plot([y0, y1], [z0, z1], color=cor, linewidth=lw)
+        x0, y0 = proj(seg.vertice_inicial)
+        x1, y1 = proj(seg.vertice_final)
+        ax.plot([x0, x1], [y0, y1], color=cor, linewidth=lw)
 
     def desenha_ponto(p, cor="black", size=60):
-        y, z = proj(p)
-        ax.scatter([y], [z], color=cor, s=size, zorder=1000)
+        x, y = proj(p)
+        ax.scatter([x], [y], color=cor, s=size, zorder=1000)
 
     def desenha_vetor(origem, vetor, cor):
-        oy, oz = proj(origem)
+        ox, oy = proj(origem)
         ax.arrow(
-            oy, oz,
-            vetor.y, vetor.z,
+            ox, oy,
+            vetor.x, vetor.y,
             width=0.02,
             head_width=0.12,
             head_length=0.18,
             length_includes_head=True,
             color=cor
-        )
-
-    # ============================================================
+        )    # ============================================================
     # ORIGEM DOS VETORES
     # ============================================================
 
@@ -261,3 +265,152 @@ def plota_recorte(
     plt.savefig(f"{output}.pdf", dpi=300, format="pdf",
                 bbox_inches="tight", pad_inches=0)
     plt.show()
+
+def plota_tudo(
+    elementos: list[Poliedro],
+    elemento_destacado: Poliedro | None = None,
+    lista_contatos: list[RegiaoContato] = None,
+):
+
+    grupos = defaultdict(list)
+    if lista_contatos:
+        for rc in lista_contatos:
+            grupos[rc.face_referencia].append(rc)
+
+    n = len(grupos)
+
+    # FIGURA ÚNICA
+    fig = plt.figure(figsize=(10, 6 + 3 * n))
+
+    # ---- eixo 3D (linha 1) ----
+    ax3d = fig.add_subplot(n + 1, 1, 1, projection="3d")
+
+    plota_elementos_base(
+        ax3d,
+        elementos=elementos,
+        elemento_destacado=elemento_destacado,
+        lista_contatos=lista_contatos,
+    )
+
+    # ---- eixos 2D (resto das linhas) ----
+    if n > 0:
+        axes_2d = [
+            fig.add_subplot(n + 1, 1, i + 2)
+            for i in range(n)
+        ]
+
+        plota_contatos_2d_por_face(axes_2d, lista_contatos)
+
+    plt.tight_layout()
+    plt.show()
+
+def plota_elementos_base(
+    ax,
+    elementos: list[Poliedro],
+    elemento_destacado: Poliedro | None = None,
+    lista_contatos: list[RegiaoContato] = None,
+):
+
+    # -----------------------------------
+    # 1) Plotar arestas (malha)
+    # -----------------------------------
+    for elemento in elementos:
+        for face in elemento.faces:
+            for aresta in face.arestas:
+                xs = [aresta.vertice_inicial.x, aresta.vertice_final.x]
+                ys = [aresta.vertice_inicial.y, aresta.vertice_final.y]
+                zs = [aresta.vertice_inicial.z, aresta.vertice_final.z]
+                ax.plot(xs, ys, zs, color="black", linewidth=0.5, alpha=0.25)
+
+    # Destacar elemento
+    if elemento_destacado:
+        for face in elemento_destacado.faces:
+            xs = [v.x for v in face.vertices]
+            ys = [v.y for v in face.vertices]
+            zs = [v.z for v in face.vertices]
+            verts = [list(zip(xs, ys, zs))]
+            ax.add_collection3d(Poly3DCollection(
+                verts, facecolor="yellow", edgecolor="black",
+                linewidth=1.2, alpha=0.40
+            ))
+
+    # Destacar elementos de contato
+    if lista_contatos:
+        elementos_contato = {rc.elemento_incidente for rc in lista_contatos
+                             if rc.elemento_incidente}
+
+        for elemento in elementos_contato:
+            for face in elemento.faces:
+                xs = [v.x for v in face.vertices]
+                ys = [v.y for v in face.vertices]
+                zs = [v.z for v in face.vertices]
+                verts = [list(zip(xs, ys, zs))]
+                ax.add_collection3d(Poly3DCollection(
+                    verts, facecolor="cyan", edgecolor="black",
+                    linewidth=1, alpha=0.30
+                ))
+
+    ax.set_xlabel("X", fontsize=14)
+    ax.set_ylabel("Y", fontsize=14)
+    ax.set_zlabel("Z", fontsize=14)
+    ax.set_title("Elementos e Elementos em Contato", fontsize=16)
+
+def _projeta_para_2d(vertices, normal):
+    """
+    Projeta os vértices 3D para o plano da face usando base ortonormal (u, v).
+    """
+    normal = np.array([normal.x, normal.y, normal.z])
+    normal = normal / np.linalg.norm(normal)
+
+    # vetor auxiliar para gerar a base
+    if abs(normal[0]) < 0.9:
+        aux = np.array([1.0, 0.0, 0.0])
+    else:
+        aux = np.array([0.0, 1.0, 0.0])
+
+    u = np.cross(normal, aux)
+    u = u / np.linalg.norm(u)
+    v = np.cross(normal, u)
+
+    xs, ys = [], []
+    for p in vertices:
+        p3 = np.array([p.x, p.y, p.z])
+        xs.append(np.dot(p3, u))
+        ys.append(np.dot(p3, v))
+
+    return xs, ys
+
+
+def plota_contatos_2d_por_face(axes, lista_contatos):
+
+    grupos = defaultdict(list)
+    for rc in lista_contatos:
+        grupos[rc.face_referencia].append(rc)
+
+    for ax, (face_ref, contatos) in zip(axes, grupos.items()):
+
+        xs, ys = _projeta_para_2d(face_ref.vertices, face_ref.normal)
+        ax.fill(xs, ys, color="red", alpha=0.3)
+        ax.plot(xs + [xs[0]], ys + [ys[0]], color="darkred", linewidth=2)
+
+        for rc in contatos:
+            xs_fi, ys_fi = _projeta_para_2d(rc.face_incidente.vertices, face_ref.normal)
+            ax.fill(xs_fi, ys_fi, color="blue", alpha=0.2)
+            ax.plot(xs_fi + [xs_fi[0]], ys_fi + [ys_fi[0]], color="blue", linewidth=1.5)
+
+            xs_ri, ys_ri = _projeta_para_2d(rc.regiao_intersecao.vertices, face_ref.normal)
+            ax.fill(xs_ri, ys_ri, color="green", alpha=0.5)
+            ax.plot(xs_ri + [xs_ri[0]], ys_ri + [ys_ri[0]],
+                    color="darkgreen", linewidth=2)
+
+            cx = sum(xs_ri) / len(xs_ri)
+            cy = sum(ys_ri) / len(ys_ri)
+            ax.text(cx, cy,
+                    f"{rc.indice_elemento_incidente}\nÁrea={rc.regiao_intersecao.calcula_area():.4f}",
+                    fontsize=12,
+                    ha="center",
+                    bbox=dict(facecolor="white", alpha=0.7))
+
+        ax.set_title(f"Face referência {face_ref.indice}", fontsize=14)
+        ax.set_aspect("equal", "box")
+        ax.grid(True)

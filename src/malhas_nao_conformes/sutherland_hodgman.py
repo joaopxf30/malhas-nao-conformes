@@ -1,4 +1,3 @@
-from plot import plota_recorte
 from src.malhas_nao_conformes.constants import OrientacaoRecorte
 from src.malhas_nao_conformes.dominio.poligono import Poligono
 from src.malhas_nao_conformes.dominio.ponto import Ponto
@@ -8,7 +7,7 @@ from src.malhas_nao_conformes.dominio.vetor import Vetor
 
 class SutherlandHodgman:
 
-    def obtem_regiao_contato(
+    def obtem_regiao_intersecao(
         self,
         face_referencia: Poligono,
         face_incidente: Poligono
@@ -16,16 +15,18 @@ class SutherlandHodgman:
         vertice_referencia = face_referencia.vertices[0]
         vetor_plano_face_referencia = face_referencia.normal * -1.0
         # Recorta primeiro o polígono incidente com a face de referência
+
         if face_incidente := self.recorta_face(
             vertice_referencia,
             vetor_plano_face_referencia,
             face_incidente,
+            face_referencia
         ):
             # Recorta a face incidente projetada com a face de referência
             for aresta_referencia in face_referencia.arestas:
                 vertice_referencia = aresta_referencia.vertice_inicial
                 vetor_plano_referencia = aresta_referencia.ordenamento.calcula_produto_vetorial(vetor_plano_face_referencia)
-                face_incidente = self.recorta_face(vertice_referencia, vetor_plano_referencia, face_incidente)
+                face_incidente = self.recorta_face(vertice_referencia, vetor_plano_referencia, face_incidente, face_referencia)
 
             return face_incidente
 
@@ -37,6 +38,7 @@ class SutherlandHodgman:
         vertice_referencia: Ponto,
         normal_referencia: Vetor,
         face_incidente: Poligono,
+        face_referencia: Poligono,
     ) -> Poligono | None:
 
         vertices_recorte = []
@@ -54,14 +56,15 @@ class SutherlandHodgman:
             if orientacao_final == OrientacaoRecorte.DENTRO:
                 vertices_recorte.append(aresta_incidente.vertice_final)
 
-            # if face_referencia:
-                # plota_recorte("corte_sutherland_hodgman.pdf",face_incidente, face_referencia, normal_referencia, [vetor_inicial_incidente, vetor_final_incidente], aresta_incidente, aresta_referencia, vertices_recorte)
-
         if len(vertices_recorte) < 3:
             return None
 
         elif len(vertices_recorte) == 4:
-            return Retangulo(vertices_recorte, face_incidente.indice)
+            try:
+                return Retangulo(vertices_recorte, face_incidente.indice)
+
+            except ZeroDivisionError:
+                return None
 
         else:
             raise NotImplementedError("Somente há suporte para geração de retângulos.")
