@@ -7,7 +7,10 @@ from src.malhas_nao_conformes.utils import cria_malha
 def processa_malha(malha: Malha, indice: Indice):
     elemento = malha.relacao_indice_elemento[indice]
     # plota_malha_elemento_destacado("malha_elemento_processar", malha.elementos, elemento)
-    relacoes_vizinhanca = malha.obtem_regioes_contato_celula(elemento)
+    relacoes_vizinhanca = malha.obtem_regioes_contato_celula(indice)
+
+
+
 
 
 if __name__ == '__main__':

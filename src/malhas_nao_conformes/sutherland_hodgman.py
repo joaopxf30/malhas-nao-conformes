@@ -61,7 +61,7 @@ class SutherlandHodgman:
             return None
 
         elif len(vertices_recorte) == 4:
-            return Retangulo(vertices_recorte)
+            return Retangulo(vertices_recorte, face_incidente.indice)
 
         else:
             raise NotImplementedError("Somente há suporte para geração de retângulos.")

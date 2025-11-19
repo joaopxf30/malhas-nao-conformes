@@ -4,6 +4,7 @@ from src.malhas_nao_conformes.dominio import Ponto, Hexaedro
 from src.malhas_nao_conformes.dominio.indice import Indice
 from src.malhas_nao_conformes.dominio.poliedro import Poliedro
 from src.malhas_nao_conformes.dominio.poligono import Poligono
+from src.malhas_nao_conformes.regiao_contato import RegiaoContato
 from src.malhas_nao_conformes.sutherland_hodgman import SutherlandHodgman
 
 
@@ -44,40 +45,40 @@ class Malha:
             self.relacao_indice_elemento[Indice(i,j,k)] = elemento
             self.relacao_elemento_indice[elemento] = Indice(i,j,k)
 
-    def obtem_regioes_contato_celula(self, elemento: Poliedro) -> list[tuple[Poliedro, Poligono, float]] | None:
+    def obtem_regioes_contato_celula(self, indice: Indice) -> RegiaoContato:
         regioes = []
-        for face in elemento.faces:
-            incremento = face.indice
-            indice_elemento_vizinho = self.relacao_elemento_indice[elemento] + incremento
-            elemento_vizinho = self.relacao_indice_elemento.get(indice_elemento_vizinho)
+        elemento = self.relacao_indice_elemento[indice]
+        for face_referencia in elemento.faces:
+            incremento = face_referencia.indice
+            indice_elemento_incidente = self.relacao_elemento_indice[elemento] + incremento
+            elemento_incidente = self.relacao_indice_elemento.get(indice_elemento_incidente)
 
-            if elemento_vizinho is None:
+            if elemento_incidente is None:
                 continue
 
-            if regiao := self.obtem_regiao_contato_face(elemento_vizinho, face):
-                regioes.append((face, elemento_vizinho, regiao))
+            face_incidente = elemento_incidente.relacao_indice_face.get(incremento * -1)
+            if regiao_corte := self.obtem_regiao_contato_face(face_incidente, face_referencia):
+                regioes.append((face_referencia, elemento_incidente, face_incidente, indice_elemento_incidente, regiao_corte))
                 incrementos = incremento.obtem_indices_perpendiculares()
-                regioes.extend(self.busca_celulas_em_largura(elemento_vizinho, incrementos, face))
+                regioes.extend(self.busca_celulas_em_largura(elemento_incidente, incrementos, face_referencia))
 
-        return regioes
+        return RegiaoContato(indice, elemento, regioes)
 
     def obtem_regiao_contato_face(
         self,
-        elemento_vizinho: Poliedro,
-        face: Poligono,
+        face_incidente: Poligono,
+        face_referencia: Poligono,
     ) -> Poligono | None:
-        face_incidente = elemento_vizinho.relacao_indice_face.get(face.indice * -1)
-
-        if face.checa_potencial_adjacencia(face_incidente):
-            regiao = SutherlandHodgman().obtem_regiao_contato(face, face_incidente)
+        if face_referencia.checa_potencial_adjacencia(face_incidente):
+            regiao = SutherlandHodgman().obtem_regiao_contato(face_referencia, face_incidente)
             return regiao
 
         else:
             return None
 
     def busca_celulas_em_largura(
-        self, elemento: Poliedro, incrementos: list[Indice], face: Poligono
-    ) -> list[tuple[Poliedro, Poligono, float]]:
+        self, elemento: Poliedro, incrementos: list[Indice], face_referencia: Poligono
+    ) -> list[tuple[Poligono, Poliedro, Poligono, Poligono]]:
         regioes = []
         explorar = deque()
         visitados = set()
@@ -89,21 +90,21 @@ class Malha:
 
             for contador, incremento in enumerate(incrementos):
                 novos_incrementos = deepcopy(incrementos)
-                indice_elemento_vizinho = self.relacao_elemento_indice[elemento] + incremento
-                elemento_vizinho = self.relacao_indice_elemento.get(indice_elemento_vizinho)
-                
-                if elemento_vizinho is None or elemento_vizinho in visitados:
+                indice_elemento_incidente = self.relacao_elemento_indice[elemento] + incremento
+                elemento_incidente = self.relacao_indice_elemento.get(indice_elemento_incidente)
+                if elemento_incidente is None or elemento_incidente in visitados:
                     continue
 
                 else:
-                    visitados.add(elemento_vizinho)
-                    if regiao := self.obtem_regiao_contato_face(elemento_vizinho, face):
-                        regioes.append((face, elemento_vizinho, regiao))
+                    visitados.add(elemento_incidente)
+                    face_incidente = elemento_incidente.relacao_indice_face.get(face_referencia.indice * -1)
+                    if regiao_corte := self.obtem_regiao_contato_face(face_incidente, face_referencia):
+                        regioes.append((face_referencia, elemento_incidente, indice_elemento_incidente, face_incidente, regiao_corte))
 
                     else:
                         novos_incrementos.pop(contador)
 
-                    explorar.append((elemento_vizinho, novos_incrementos))
+                    explorar.append((elemento_incidente, novos_incrementos))
 
         return regioes
 
