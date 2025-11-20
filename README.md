@@ -52,7 +52,7 @@ Para acionar o código basta rodar da raiz do projeto
 python main.py
 ```
 
-O codigo realiza inicialmente a construção de uma malha (gera uma instância da classe `Malha`) composta por hexaedros 
+O código realiza inicialmente a construção de uma malha (gera uma instância da classe `Malha`) composta por hexaedros 
 (cubos ou paralelepípedos) de acordo com os parâmetros fornecidos para a função `cria_malha()`:
 
 ```python
@@ -71,12 +71,12 @@ def cria_malha(
 Detalhes sobre os parâmetros:
 * `comprimento_malha`: tamanho da malha no eixo x;
 * `largura_malha`: tamanho da malha no eixo y;
-* `altura_malha`: tamanho da malha no eixo z.
+* `altura_malha`: tamanho da malha no eixo z;
 * `numero_elementos_x`: quantidade de elementos presentes na malha no eixo x;
 * `numero_elementos_y`: quantidade de elementos presentes na malha no eixo y;
 * `numero_elementos_z`: quantidade de elementos presentes na malha no eixo z;
 * `translacoes_z`: permite aplicar translações no eixo z geradas aleatoriamente para cada coluna de elementos no plano xy;
-* `translacoes_yz`: permite aplicar translações no eixo y geradas aleatoriamente para coluna de elemento em x
+* `translacoes_yz`: permite aplicar translações no eixo y geradas aleatoriamente para cada coluna de elemento em x.
 
 O único processamento da malha disponível é o cálculo da área de contato entre células vizinhas a partir de um elemento 
 selecionado. A função `processa_malha()` é responsável por detectar as vizinhanças do elemento indicado por uma instância
