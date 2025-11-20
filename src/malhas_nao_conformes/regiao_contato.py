@@ -1,10 +1,5 @@
 from src.malhas_nao_conformes.dominio import Poligono, Poliedro, Indice
 
-FACE_REFERENCIA = 0
-FACE_INCIDENTE = 1
-REGIAO_CONTATO = 2
-AREA_CONTATO = 3
-
 
 class RegiaoContato:
 

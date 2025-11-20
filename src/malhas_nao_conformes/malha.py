@@ -1,7 +1,5 @@
 from copy import deepcopy
 from collections import deque
-
-from plot import plota_malha_elemento_destacado
 from src.malhas_nao_conformes.dominio import Ponto, Hexaedro
 from src.malhas_nao_conformes.dominio.indice import Indice
 from src.malhas_nao_conformes.dominio.poliedro import Poliedro

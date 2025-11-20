@@ -1,7 +1,7 @@
 import random
 from src.malhas_nao_conformes.malha import Malha
 
-random.seed(52)
+random.seed(102)
 
 def cria_malha(
     comprimento_malha: float,
