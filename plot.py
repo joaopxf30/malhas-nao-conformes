@@ -1,98 +1,27 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from collections import defaultdict
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-from src.malhas_nao_conformes.dominio import Poliedro, Indice
+from src.malhas_nao_conformes.dominio import Indice
 from src.malhas_nao_conformes.regiao_contato import RegiaoContato
 
 
 def plota_resultados_vizinhanca(
-    elementos: list[Poliedro],
     indice: Indice,
-    elemento_referente: Poliedro | None = None,
     regioes_contato: list[RegiaoContato] = None,
 ):
-    """ Função orquestradora """
-    # --- Plota o 3D ---
-    plota_elemento_referente_e_incidentes(
-        elementos=elementos,
-        elemento_referente=elemento_referente,
-        lista_contatos=regioes_contato,
-    )
-
     if not regioes_contato:
         return
 
-    # --- Agrupa regiões por face da referência ---
     vizinhos_por_face = defaultdict(list)
-    for rc in regioes_contato:
-        vizinhos_por_face[rc.face_referencia].append(rc)
+    for regiao_contato in regioes_contato:
+        vizinhos_por_face[regiao_contato.face_referencia].append(regiao_contato)
 
-    # --- Para cada face, gera um plot 2D independente ---
-    for face_ref, contatos in vizinhos_por_face.items():
+    for face_referencia, regioes_contato in vizinhos_por_face.items():
         plota_contatos_2d_por_face(
-            face_referencia=face_ref,
-            lista_contatos=contatos,
+            face_referencia=face_referencia,
+            regioes_contato=regioes_contato,
             indice=indice,
         )
-
-
-def plota_elemento_referente_e_incidentes(
-    elementos: list[Poliedro],
-    elemento_referente: Poliedro | None = None,
-    lista_contatos: list[RegiaoContato] = None,
-):
-    """ Cria sua própria figure/ax 3D """
-    fig = plt.figure(figsize=(10, 7))
-    ax = fig.add_subplot(111, projection="3d")
-
-    # Malha completa
-    for elemento in elementos:
-        for face in elemento.faces:
-            for aresta in face.arestas:
-                ax.plot(
-                    [aresta.vertice_inicial.x, aresta.vertice_final.x],
-                    [aresta.vertice_inicial.y, aresta.vertice_final.y],
-                    [aresta.vertice_inicial.z, aresta.vertice_final.z],
-                    color="black", linewidth=0.5, alpha=0.25
-                )
-
-    # Elemento de referência
-    if elemento_referente:
-        for face in elemento_referente.faces:
-            xs = [v.x for v in face.vertices]
-            ys = [v.y for v in face.vertices]
-            zs = [v.z for v in face.vertices]
-            poly = Poly3DCollection(
-                [list(zip(xs, ys, zs))],
-                facecolor="salmon", edgecolor="black",
-                linewidth=1.0, alpha=0.5, zorder=1000
-            )
-            ax.add_collection3d(poly)
-
-    # Incidentes
-    if lista_contatos:
-        elementos_incidentes = {rc.elemento_incidente for rc in lista_contatos}
-        for elemento in elementos_incidentes:
-            for face in elemento.faces:
-                xs = [v.x for v in face.vertices]
-                ys = [v.y for v in face.vertices]
-                zs = [v.z for v in face.vertices]
-                poly = Poly3DCollection(
-                    [list(zip(xs, ys, zs))],
-                    facecolor="blue", edgecolor="black",
-                    linewidth=1.0, alpha=0.05
-                )
-                ax.add_collection3d(poly)
-
-    ax.view_init(elev=20, azim=50, roll=-1)
-    ax.set_xlabel(r"$x$", fontsize=14)
-    ax.set_ylabel(r"$y$", fontsize=14)
-    ax.set_zlabel(r"$z$", fontsize=14)
-
-    plt.tight_layout()
-    plt.show()
-
 
 def _projeta_para_2d(vertices, normal):
     normal = np.array([normal.x, normal.y, normal.z])
@@ -105,34 +34,30 @@ def _projeta_para_2d(vertices, normal):
     v = np.cross(normal, u)
 
     xs, ys = [], []
-    for p in vertices:
-        p3 = np.array([p.x, p.y, p.z])
-        xs.append(np.dot(p3, u))
-        ys.append(np.dot(p3, v))
+    for vertice in vertices:
+        array_vertice = np.array([vertice.x, vertice.y, vertice.z])
+        xs.append(np.dot(array_vertice, u))
+        ys.append(np.dot(array_vertice, v))
 
     return xs, ys
 
 
-def plota_contatos_2d_por_face(face_referencia, lista_contatos, indice: Indice):
-    """ Cada face cria sua própria figure/ax 2D """
+def plota_contatos_2d_por_face(face_referencia, regioes_contato, indice: Indice):
     fig, ax = plt.subplots(figsize=(6, 6))
 
-    # --- Face referência ---
     xs_ref, ys_ref = _projeta_para_2d(face_referencia.vertices, face_referencia.normal)
     ax.fill(xs_ref, ys_ref, color="lightgrey", alpha=0.4)
     ax.plot(xs_ref + [xs_ref[0]], ys_ref + [ys_ref[0]], color="black", linewidth=1.8)
 
     all_x, all_y = xs_ref.copy(), ys_ref.copy()
 
-    for rc in lista_contatos:
+    for regiao_contato in regioes_contato:
 
-        # Face incidente
-        xs_fi, ys_fi = _projeta_para_2d(rc.face_incidente.vertices, face_referencia.normal)
+        xs_fi, ys_fi = _projeta_para_2d(regiao_contato.face_incidente.vertices, face_referencia.normal)
         ax.fill(xs_fi, ys_fi, color="blue", alpha=0.15)
         ax.plot(xs_fi + [xs_fi[0]], ys_fi + [ys_fi[0]], color="blue", linewidth=1.2)
 
-        # Região cortada
-        xs_ri, ys_ri = _projeta_para_2d(rc.regiao_intersecao.vertices, face_referencia.normal)
+        xs_ri, ys_ri = _projeta_para_2d(regiao_contato.regiao_intersecao.vertices, face_referencia.normal)
         ax.fill(xs_ri, ys_ri, color="salmon", alpha=0.6)
         ax.plot(xs_ri + [xs_ri[0]], ys_ri + [ys_ri[0]], color="darkred", linewidth=1.8)
 
@@ -147,12 +72,12 @@ def plota_contatos_2d_por_face(face_referencia, lista_contatos, indice: Indice):
 
         ax.text(
             cx, cy,
-            fr"$\mathsf{{C}}_{{{rc.indice_elemento_incidente}}}$",
+            fr"$\mathsf{{C}}_{{{regiao_contato.indice_elemento_incidente}}}$",
             fontsize=13, ha="center", va="center",
             bbox=dict(facecolor="white", alpha=0.6, edgecolor='none')
         )
 
-        area_corte = rc.regiao_intersecao.calcula_area()
+        area_corte = regiao_contato.regiao_intersecao.calcula_area()
         ax.text(
             cx, cy - dy,
             f"{area_corte:.4f} u.a.",

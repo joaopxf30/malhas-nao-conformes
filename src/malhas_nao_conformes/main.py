@@ -10,11 +10,8 @@ def processa_malha(malha: Malha, indice: Indice):
     for regiao_contato in regioes_contato:
         print(regiao_contato)
 
-    elemento_referencia = malha.relacao_indice_elemento.get(indice)
     plota_resultados_vizinhanca(
-        malha.elementos,
         indice,
-        elemento_referencia,
         regioes_contato
     )
 
@@ -24,12 +21,12 @@ if __name__ == '__main__':
         comprimento_malha=10,
         largura_malha=9,
         altura_malha=9,
-        numero_elementos_x=3,
-        numero_elementos_y=3,
-        numero_elementos_z=3,
+        numero_elementos_x=20,
+        numero_elementos_y=20,
+        numero_elementos_z=20,
         translacoes_z=True,
         translacoes_yz=True
     )
-    processa_malha(malha, Indice(3,2,2))
+    processa_malha(malha, Indice(19,19,20))
 
 
