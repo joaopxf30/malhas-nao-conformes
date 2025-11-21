@@ -2,7 +2,7 @@
 
 Este projeto, intitulado malhas-nao-conformes, implementa o algoritmo de Sutherland Hodgman em uma versão tridimensional 
 para calcular a área de contato entre céulas vizinhas em malhas não-confomres
-A versão utilizada para desenvolvimento é Python 3.12.3.
+A versão utilizada para desenvolvimento é Python 3.11.2
 
 
 ---
