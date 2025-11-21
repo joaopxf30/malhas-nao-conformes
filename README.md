@@ -49,7 +49,7 @@ As dependências são instaladas.
 Para acionar o código basta rodar da raiz do projeto
 
 ```
-python main.py
+python src/malhas_nao_conformes/main.py
 ```
 
 O código realiza inicialmente a construção de uma malha (gera uma instância da classe `Malha`) composta por hexaedros 
